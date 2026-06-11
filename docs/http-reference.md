@@ -58,3 +58,72 @@
 | Cache-Control | Control Caching Behavior | no-cache |
 | Date | Define timestamp of Message | Mon, 08 Jun 2026 10:00:00 GMT |
 
+---
+---
+
+# Richardson Maturity Model applied to Sports League API
+
+## Level 0: The Swamp of POX (Plain Old XML/JSON)
+**Description:** At this level, HTTP is used purely as a transport protocol (tunneling). The API has a single endpoint (a "smart endpoint") and accepts only one HTTP method (typically `POST`). The actual operation and resource details are buried inside the request body. All responses return `200 OK` regardless of success or failure, with error details serialized within the response payload.
+* **Endpoint:** `POST /api/sportsleague`
+* **Request Example (Get Standings):**
+  ```json
+  {
+    "action": "get_standings",
+    "league_id": 42
+  }
+  ```
+* **Request Example (Create Team):**
+  ```json
+  {
+    "action": "create_team",
+    "league_id": 42,
+    "team_name": "Red Devils"
+  }
+  ```
+* **Real-World Connection:** While academically discouraged for REST, this pattern is the foundation of **SOAP**, **GraphQL** (single `POST /graphql` endpoint), and **gRPC** (tunneling over HTTP/2).
+
+---
+
+## Level 1: Resources
+**Description:** This level introduces the concept of **Resources** (individual URIs) instead of routing everything through a single endpoint. We divide the system into distinct business entities (e.g., leagues, teams, players). However, we still tunnel actions through a single HTTP method (typically `POST`).
+* **Endpoints:**
+  * `POST /api/leagues/42` (To fetch league details)
+  * `POST /api/leagues/42/create-team` (To add a team)
+  * `POST /api/players/123/delete` (To remove a player)
+* **Real-World Connection:** This represents an intermediate step toward modularity but suffers from a lack of standard method semantics. Clients must learn custom action endpoints for every resource.
+
+---
+
+## Level 2: HTTP Verbs & Status Codes
+**Description:** At this level, we use standard HTTP methods (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) according to their official specifications (safety and idempotency). We also utilize correct HTTP status codes to communicate outcome states instead of returning `200 OK` for failures.
+* **Endpoints & Methods:**
+  * `GET /api/leagues/42/` -> Retrieve league details (`200 OK` on success, `404 Not Found` if missing)
+  * `POST /api/leagues/42/teams/` -> Create a new team in league 42 (`201 Created` on success, `400 Bad Request` if payload is invalid)
+  * `PUT /api/teams/1234/` -> Replace/update team details (`200 OK` or `204 No Content`)
+  * `DELETE /api/players/99/` -> Remove player 99 (`204 No Content`)
+  * `POST /api/leagues/42/teams/` (with a duplicate team name) -> Returns `409 Conflict`
+* **Real-World Connection:** **This is the industry standard for REST APIs.** Level 2 strikes the ideal balance between standard HTTP semantics and developer velocity. It is the target level for the Sports League API.
+
+---
+
+## Level 3: Hypermedia Controls (HATEOAS)
+**Description:** The highest level of maturity, introducing **HATEOAS (Hypermedia As The Engine Of Application State)**. The server response not only returns the requested data but also provides links to related actions the client can perform next. The API becomes self-documenting, allowing the client to discover actions dynamically.
+* **Request:** `GET /api/players/123/`
+* **Response Example:**
+  ```json
+  {
+    "id": 123,
+    "first_name": "Lionel",
+    "last_name": "Messi",
+    "position": "FWD",
+    "_links": {
+      "self": { "href": "/api/players/123/", "method": "GET" },
+      "team": { "href": "/api/teams/10/", "method": "GET" },
+      "update_profile": { "href": "/api/players/123/", "method": "PATCH" },
+      "transfer_player": { "href": "/api/players/123/transfer/", "method": "POST" },
+      "retire_player": { "href": "/api/players/123/", "method": "DELETE" }
+    }
+  }
+  ```
+* **Real-World Connection:** While theoretically elegant, Level 3 is rarely used in production. It increases payload size, complicates client implementation (clients must parse links rather than constructing URLs), and struggles to integrate with modern type-safe clients (like TypeScript/OpenAPI). Under market demands, Level 2 combined with OpenAPI (Swagger) documentation is preferred.
