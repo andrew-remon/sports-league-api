@@ -16,7 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.http import JsonResponse # to return a response message in a view format
+
+# this is the function that runs whenever we inspect api/health/ URL
+def health_check(request):
+    return JsonResponse({"status": "healthy", "version": "0.1.0"})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/health/', health_check, name='health_check'), # define the new URL and map it 'health_check' function
 ]
