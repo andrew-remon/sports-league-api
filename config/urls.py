@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse # to return a response message in a view format
 
 # this is the function that runs whenever we inspect api/health/ URL
@@ -25,4 +25,5 @@ def health_check(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', health_check, name='health_check'), # define the new URL and map it 'health_check' function
+    path('api/', include('leagues.urls'))
 ]
