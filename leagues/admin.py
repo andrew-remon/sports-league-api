@@ -1,13 +1,24 @@
 from django.contrib import admin
+from django.db.models import Count
 from .models import League, Team, Player
 
 # Register your models here.
 @admin.register(League)
 class LeagueAdmin(admin.ModelAdmin):
-    list_display = ('name', 'max_teams', 'created_at',)
+    list_display = ('name', "max_teams", 'created_at', 'get_team_count')
     search_fields = ('name',)
 
-    # todo: On Day 11, once I learn how QuerySets and annotations work, I will return to LeagueAdmin and replace max_teams or add a new column to show the active team count
+    # these two methods represent Separation of Concerns: Fetching and Displaying
+    
+    # this method is used to fetch the data from Database
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request) # to override the base function
+        return queryset.annotate(teams_count=Count('teams'))
+
+    # this method get the value of ORM method above and display it (UI)
+    @admin.display(description='Teams Registered', ordering='teams_count')
+    def get_team_count(self, obj):
+        return obj.teams_count
 
 
 @admin.register(Team)
