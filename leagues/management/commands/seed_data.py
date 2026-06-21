@@ -21,6 +21,12 @@ class Command(BaseCommand):
             }
         )
 
+        bundesliga, _ = League.objects.get_or_create(
+            name="Bundesliga",
+            defaults= {
+                "max_teams": 20,
+            }
+        )
 
         # ----------------- Teams Creation ---------------------
         real_madrid, _ = Team.objects.get_or_create(
@@ -52,6 +58,30 @@ class Command(BaseCommand):
             league= premier_league,
             defaults= {
                 "city":"Merseyside",
+            }
+        )
+
+        arsenal, _ = Team.objects.get_or_create(
+            name="Arsenal",
+            league=premier_league,
+            defaults= {
+                "city":"London",
+            }
+        )
+
+        bayern_munich, _ = Team.objects.get_or_create(
+            name="Bayern Munich",
+            league=bundesliga,
+            defaults={
+                "city":"Munich",
+            }
+        )
+
+        borussia_dortmund, _ = Team.objects.get_or_create(
+            name="Borussia Dortmund",
+            league=bundesliga,
+            defaults= {
+                "city":"Dortmund",
             }
         )
 
@@ -105,6 +135,7 @@ class Command(BaseCommand):
                 "position":Player.Position.FORWARD,
             }
         )
+
         p6 = Player.objects.get_or_create(
             first_name="Marc",
             last_name="Guehi",
@@ -132,6 +163,106 @@ class Command(BaseCommand):
             defaults={
                 "jersey_number":1,
                 "position":Player.Position.GOALKEEPER,
+            }
+        )
+
+        p9 = Player.objects.get_or_create(
+            first_name= "Eder",
+            last_name= "Militao",
+            team= real_madrid,
+            defaults= {
+                "jersey_number": 3,
+                "position": Player.Position.DEFENDER,
+            }
+        )
+
+        p10 = Player.objects.get_or_create(
+            first_name= "William",
+            last_name= "Saliba",
+            team=arsenal,
+            defaults= {
+                "jersey_number": 2,
+                "position": Player.Position.DEFENDER,
+            }
+        )
+
+        p11 = Player.objects.get_or_create(
+            first_name= "Declan",
+            last_name= "Rice",
+            team= arsenal,
+            defaults= {
+                "jersey_number": 41,
+                "position": Player.Position.MIDFIELDER,
+            }
+        )
+
+        p12 = Player.objects.get_or_create(
+            first_name= "Leandro",
+            last_name= "Trossard",
+            team= arsenal,
+            defaults= {
+                "jersey_number": 19,
+                "position": Player.Position.FORWARD,
+            }
+        )
+
+        p13 = Player.objects.get_or_create(
+            first_name= "Manuel",
+            last_name= "Neuer",
+            team= bayern_munich,
+            defaults= {
+                "jersey_number": 1,
+                "position": Player.Position.GOALKEEPER,
+            }
+        )
+
+        p14 = Player.objects.get_or_create(
+            first_name= "Harry",
+            last_name= "Kane",
+            team=bayern_munich,
+            defaults= {
+                "jersey_number": 9,
+                "position": Player.Position.FORWARD,
+            }
+        )
+
+        p15 = Player.objects.get_or_create(
+            first_name= "Luis",
+            last_name= "Diaz",
+            team=bayern_munich,
+            defaults= {
+                "jersey_number": 14,
+                "position": Player.Position.FORWARD,
+            }
+        )
+
+        p16 = Player.objects.get_or_create(
+            first_name= "Yan",
+            last_name= "Couto",
+            team= borussia_dortmund,
+            defaults= {
+                "jersey_number": 2,
+                "position": Player.Position.DEFENDER,
+            }
+        )
+
+        p17 = Player.objects.get_or_create(
+            first_name= "Ramy",
+            last_name= "Bensebaini",
+            team= borussia_dortmund,
+            defaults= {
+                "jersey_number": 5,
+                "position": Player.Position.DEFENDER,
+            }
+        )
+
+        p18 = Player.objects.get_or_create(
+            first_name= "Felix",
+            last_name= "Nmecha",
+            team= borussia_dortmund,
+            defaults= {
+                "jersey_number": 8,
+                "position": Player.Position.MIDFIELDER,
             }
         )
 
