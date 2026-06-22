@@ -1,4 +1,6 @@
 from django.db import models
+from utils.exceptions import ValidationError
+from django.db.models import Q, F
 
 # Create your models here.
 class League(models.Model):
@@ -56,3 +58,99 @@ class Player(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class Match(models.Model):
+    class MatchStatus(models.TextChoices):
+        SCHEDULED = "scheduled", "Scheduled"
+        IN_PROGRESS = "in_progress", "In Progress"
+        COMPLETED = "completed", "Completed"
+        POSTPONED = "postponed", "Postponed"
+
+    league = models.ForeignKey(
+        League,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="matches",
+    )
+    home_team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="home_matches",
+    )
+    away_team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="away_matches",
+    )
+    match_day = models.PositiveIntegerField()
+    scheduled_date = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=15, choices=MatchStatus.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=~Q(home_team=F("away_team")),
+                name= "different_teams_per_match",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.home_team} VS {self.away_team}"
+
+    def clean(self):
+        # a team can't play itself
+        if self.home_team == self.away_team:
+            raise ValidationError("A team can't play itself, please enter different team")
+        if self.home_team.league != self.league or self.away_team.league != self.league:
+            raise ValidationError("A team can't play in a different league")
+
+    def save(self,*args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    @property
+    def winner(self) -> "Team | None":
+        if self.status != Match.MatchStatus.COMPLETED:
+            return None
+
+        if self.result.home_score > self.result.away_score:
+            return self.home_team
+        elif self.result.home_score < self.result.away_score:
+            return self.away_team
+        else:
+            return None
+
+    @property
+    def is_draw(self) -> bool | None:
+        if self.status != Match.MatchStatus.COMPLETED:
+            return None
+        return self.result.home_score == self.result.away_score
+
+
+    @property
+    def score_display(self) -> str:
+        if self.status != Match.MatchStatus.COMPLETED:
+            return "Not played"
+
+        return f"{self.result.home_score} - {self.result.away_score}"
+
+
+class MatchResult(models.Model):
+    match = models.OneToOneField(
+        Match,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="result",
+    )
+    home_score = models.PositiveIntegerField()
+    away_score = models.PositiveIntegerField()
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    # no use here since this Model class is inline
+    # def __str__(self):
+    #     return f"{self.home_score} - {self.away_score}"

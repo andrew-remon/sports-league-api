@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from leagues.models import League, Team, Player
+from leagues.models import *
 
 class Command(BaseCommand):
     help = "seeds the database with inital leagues, teams and players."
@@ -82,6 +82,22 @@ class Command(BaseCommand):
             league=bundesliga,
             defaults= {
                 "city":"Dortmund",
+            }
+        )
+
+        leipzig, _ = Team.objects.get_or_create(
+            name="Leipzig",
+            league=bundesliga,
+            defaults={
+                "city":"Leipzig",
+            }
+        )
+
+        chelsea, _ = Team.objects.get_or_create(
+            name="Chelsea",
+            league=premier_league,
+            defaults= {
+                "city":"London",
             }
         )
 
@@ -264,6 +280,61 @@ class Command(BaseCommand):
                 "jersey_number": 8,
                 "position": Player.Position.MIDFIELDER,
             }
+        )
+
+        # ----------------- Matches Creation ---------------------
+
+        m1, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team = man_city,
+            away_team=liverpool,
+            status = Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 5,
+            }
+        )
+
+        m2, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team = arsenal,
+            away_team=chelsea,
+            status = Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 7,
+            }
+        )
+
+        m3, _ = Match.objects.get_or_create(
+            league=la_liga,
+            home_team = real_madrid,
+            away_team=barcelona,
+            status = Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 2,
+            }
+        )
+
+        m4, _ = Match.objects.get_or_create(
+            league=bundesliga,
+            home_team = bayern_munich,
+            away_team=borussia_dortmund,
+            status = Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 11,
+            }
+        )
+
+        # ----------------- Matches Result Creation ---------------------
+        r1, _ = MatchResult.objects.get_or_create(
+            match=m1,
+            home_score=3,
+            away_score=0,
+        )
+
+        r2, _ = MatchResult.objects.get_or_create(
+            match=m3,
+            home_score=4,
+            away_score=2,
         )
 
         self.stdout.write(self.style.SUCCESS("Database Seeding Completed Successfully!"))
