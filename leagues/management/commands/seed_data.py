@@ -61,6 +61,78 @@ class Command(BaseCommand):
             }
         )
 
+        newcastle, _ = Team.objects.get_or_create(
+            name="Newcastle United",
+            league=premier_league,
+            defaults={
+                "city": "Newcastle",
+            }
+        )
+
+        fulham, _ = Team.objects.get_or_create(
+            name="Fulham",
+            league=premier_league,
+            defaults={
+                "city": "London",
+            }
+        )
+
+        aston_villa, _ = Team.objects.get_or_create(
+            name="Aston Villa",
+            league=premier_league,
+            defaults={
+                "city": "Birmingham",
+            }
+        )
+
+        tottenham, _ = Team.objects.get_or_create(
+            name="Tottenham",
+            league=premier_league,
+            defaults={
+                "city": "London",
+            }
+        )
+
+        bournemouth, _ = Team.objects.get_or_create(
+            name="Bournemouth",
+            league=premier_league,
+            defaults={
+                "city": "Bournemouth",
+            }
+        )
+
+        brentford, _ = Team.objects.get_or_create(
+            name="Brentford",
+            league=premier_league,
+            defaults={
+                "city": "London",
+            }
+        )
+
+        everton, _ = Team.objects.get_or_create(
+            name="Everton",
+            league=premier_league,
+            defaults={
+                "city": "Merseyside",
+            }
+        )
+
+        leeds_united, _ = Team.objects.get_or_create(
+            name="Leeds United",
+            league=premier_league,
+            defaults={
+                "city": "Leeds",
+            }
+        )
+
+        crystal_palace, _ = Team.objects.get_or_create(
+            name="Crystal Palace",
+            league=premier_league,
+            defaults={
+                "city": "London",
+            }
+        )
+
         arsenal, _ = Team.objects.get_or_create(
             name="Arsenal",
             league=premier_league,
@@ -324,6 +396,161 @@ class Command(BaseCommand):
             }
         )
 
+                # === 10 COMPLETED MATCHES ===
+
+        m5, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=newcastle,
+            away_team=fulham,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 1,
+            }
+        )
+
+        m6, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=aston_villa,
+            away_team=tottenham,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 1,
+            }
+        )
+
+        m7, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=bournemouth,
+            away_team=brentford,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 2,
+            }
+        )
+
+        m8, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=everton,
+            away_team=leeds_united,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 2,
+            }
+        )
+
+        m9, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=crystal_palace,
+            away_team=man_city,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 3,
+            }
+        )
+
+        m10, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=liverpool,
+            away_team=arsenal,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 3,
+            }
+        )
+
+        m11, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=chelsea,
+            away_team=newcastle,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 4,
+            }
+        )
+
+        m12, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=fulham,
+            away_team=aston_villa,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 4,
+            }
+        )
+
+        m13, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=tottenham,
+            away_team=bournemouth,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 5,
+            }
+        )
+
+        m14, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=brentford,
+            away_team=everton,
+            status=Match.MatchStatus.COMPLETED,
+            defaults={
+                "match_day": 5,
+            }
+        )
+
+
+        # === 5 SCHEDULED MATCHES ===
+
+        m15, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=leeds_united,
+            away_team=crystal_palace,
+            status=Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 6,
+            }
+        )
+
+        m16, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=man_city,
+            away_team=arsenal,
+            status=Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 6,
+            }
+        )
+
+        m17, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=liverpool,
+            away_team=chelsea,
+            status=Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 7,
+            }
+        )
+
+        m18, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=newcastle,
+            away_team=tottenham,
+            status=Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 7,
+            }
+        )
+
+        m19, _ = Match.objects.get_or_create(
+            league=premier_league,
+            home_team=aston_villa,
+            away_team=brentford,
+            status=Match.MatchStatus.SCHEDULED,
+            defaults={
+                "match_day": 8,
+            }
+        )
+
         # ----------------- Matches Result Creation ---------------------
         r1, _ = MatchResult.objects.get_or_create(
             match=m1,
@@ -337,4 +564,64 @@ class Command(BaseCommand):
             away_score=2,
         )
 
+        r3, _ = MatchResult.objects.get_or_create(
+            match=m5,
+            home_score=2,
+            away_score=1,
+        )
+
+        r4, _ = MatchResult.objects.get_or_create(
+            match=m6,
+            home_score=0,
+            away_score=2,
+        )
+
+        r5, _ = MatchResult.objects.get_or_create(
+            match=m7,
+            home_score=1,
+            away_score=3,
+        )
+
+        r6, _ = MatchResult.objects.get_or_create(
+            match=m8,
+            home_score=2,
+            away_score=2,
+        )
+
+        r7, _ = MatchResult.objects.get_or_create(
+            match=m9,
+            home_score=1,
+            away_score=0,
+        )
+
+        r8, _ = MatchResult.objects.get_or_create(
+            match=m10,
+            home_score=1,
+            away_score=1,
+        )
+
+        r9, _ = MatchResult.objects.get_or_create(
+            match=m11,
+            home_score=3,
+            away_score=2,
+        )
+
+        r10, _ = MatchResult.objects.get_or_create(
+            match=m12,
+            home_score=0,
+            away_score=0,
+        )
+
+        r11, _ = MatchResult.objects.get_or_create(
+            match=m13,
+            home_score=2,
+            away_score=0,
+        )
+
+        r12, _ = MatchResult.objects.get_or_create(
+            match=m14,
+            home_score=1,
+            away_score=4,
+        )
+        
         self.stdout.write(self.style.SUCCESS("Database Seeding Completed Successfully!"))
