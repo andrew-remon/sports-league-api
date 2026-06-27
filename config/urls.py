@@ -17,13 +17,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse # to return a response message in a view format
+from drf_spectacular.views import (SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView)
+
 
 # this is the function that runs whenever we inspect api/health/ URL
 def health_check(request):
     return JsonResponse({"status": "healthy", "version": "0.1.0"})
 
+# defining drf spectacular endpoints
+extrapatters = [
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc')
+]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', health_check, name='health_check'), # define the new URL and map it 'health_check' function
-    path('api/', include('leagues.urls'))
+    path('api/', include('leagues.urls')),
+    path('api/', include(extrapatters)),
 ]

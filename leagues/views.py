@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import JsonResponse, Http404
 from leagues.models import Team, League, Player
 from django.views.decorators.csrf import csrf_exempt
+from leagues.serializers import LeagueSerializer
+from rest_framework.generics import ListCreateAPIView
 import json
 
 # Create your views here.
@@ -76,3 +78,7 @@ def team_collection_view(request, league_id):
                 teams_list.append({"id": team.id, "name": team.name})
 
             return JsonResponse(teams_list, safe=False)
+
+class LeagueListCreateAPIView(ListCreateAPIView):
+    queryset = League.objects.all()
+    serializer_class = LeagueSerializer
