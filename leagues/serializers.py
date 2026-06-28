@@ -13,7 +13,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model= Team
-        fields= ["id", "name", "league", "league_detail", "city", "founded_year", "player_count", "created_at"]
+        fields= ["id", "name", "league", "city", "founded_year", "player_count", "created_at"]
 
     def get_player_count(self, obj):
         return obj.players.count()
@@ -51,20 +51,20 @@ class PlayerSerializer(serializers.ModelSerializer):
         return representation
 
 class MatchResultSerializer(serializers.ModelSerializer):
-    model = MatchResult
-    match = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all())
+    match = serializers.PrimaryKeyRelatedField(queryset=Match.objects.all())
 
     class Meta:
+        model = MatchResult
         fields = ["id", "match", "home_score", "away_score", "recorded_at"]
 
 class MatchSerializer(serializers.ModelSerializer):
-    model = Match
     result = MatchResultSerializer(read_only=True)
     league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
     home_team = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all())
     away_team = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all())
 
     class Meta:
+        model = Match
         fields = ["id", "league", "home_team", "away_team", "match_day", "scheduled_date", "status", "result"]
 
     def validate(self, attrs):
