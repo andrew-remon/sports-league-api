@@ -140,23 +140,19 @@ class MatchViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         league_id = self.request.query_params.get("league")
-        status = self.request.query_params.get("status")
+        status = self.request.query_params.get("match_status")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
         if status:
             queryset = queryset.filter(status = status)
-        return queryset.select_related("league", "home_team", "away_tam", "result")
+        return queryset.select_related("league", "home_team", "away_team", "result")
 
-    @action(detail=True, methods=['post'])
-    def record_result(self, request, pk=None):
-        match = self.get_object()
-        result = MatchResult.objects.create(
-            match= match,
-            home_score=request.data["home_score"],
-            away_score=request.data["away_score"],
-            )
-        match.status = Match.MatchStatus.COMPLETED
-        match.save()
-
-        serializer = MatchResultSerializer(result)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+@action(detail=True, methods=['post'])
+def record_result(self, request, pk=None):
+    match = self.get_object()
+    serializer = MatchResultSerializer(data=request.data) # deserialization
+    serializer.is_valid(raise_exception=True)
+    serializer.save(match=match)
+    match.status = Match.MatchStatus.COMPLETED
+    match.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED) # serialization
