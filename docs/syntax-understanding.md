@@ -1,0 +1,44 @@
+## Views
+
+#### get_queryset() method (ViewSet)
+→ it's the **data scope** that ModelMixins (list/retrieve) call and deal with internally.
+→ It happens before the serialization phase.
+→ It is responsible for query optimization (fast access, avoiding N+1 issue, etc...)
+
+#### @action decorator
+→ is a decorator that tells the router to generate an extra URL for a method that isn't one of the six default CRUD operations (list, create, retrieve, update, partial_update, destroy).
+
+---
+
+## Serializers
+→ Is designed by default to serialize one object at a time.
+→ Using `many=true` implies that this data is iterable/a collection. so to_representation() method inside BaseSerializer runs once per item.
+→ In the project: PlayerSerializer.to_representation() → calls TeamSerializer(instance.team).data → which itself calls LeagueSerializer(instance.league).data.
+
+---
+
+## URLs
+
+#### reverse() method → when basename=None in urls router
+league-list       → GET/POST /leagues/
+league-detail     → GET/PUT/PATCH/DELETE /leagues/{pk}/
+league-standings  → GET /leagues/{pk}/standings/   (from your @action)
+
+team-list         → GET/POST /teams/
+team-detail       → GET/PUT/PATCH/DELETE /teams/{pk}/
+team-players      → GET /teams/{pk}/players/   (from your @action)
+
+---
+
+## Intersections
+
+#### select_related() method
+Although it's defined in get_queryset() method in ViewSet, but it's coupled with its serializer because serializer shapes data based on the fields given row by row, if the field was an internal one from a foreign table, a N+1 issue occurs.
+That's why in this method **we define all fields that will be used by the serializer and isn't directly in the table** (foreign keys, one to one relationship)
+
+#### checklist points
+1. Does the field use PrimaryKeyRelatedField? → no join needed, field_id is free.
+2. Does the field use a nested serializer or source='related.attr'? → join needed for that hop.
+3. Does to_representation() call another serializer? → follow that chain, join needs to cover every hop.
+4. Does a SerializerMethodField call .count()? → prefetch is useless, .count() always hits DB fresh. Use len(obj.related.all()) if you want the prefetch cache respected.
+5. Match select_related/prefetch_related depth to the deepest traversal found in steps 2–4, not to every FK the model happens to have.
