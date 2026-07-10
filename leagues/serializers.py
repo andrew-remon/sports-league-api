@@ -16,7 +16,8 @@ class TeamSerializer(serializers.ModelSerializer):
         fields= ["id", "name", "league", "city", "founded_year", "player_count", "created_at"]
 
     def get_player_count(self, obj):
-        return obj.players.count()
+        # return obj.players.count() # count function hits DB
+        return len(obj.players.all()) # respect prefetch_relate() method cache
 
     def validate_name(self, value):
         value = value.strip()
@@ -71,7 +72,7 @@ class MatchSerializer(serializers.ModelSerializer):
         if attrs["home_team"] == attrs["away_team"]:
             raise serializers.ValidationError("A team can't play itself.")
 
-        if attrs["home_team"].league != attrs["away_team"].league:
+        if attrs["home_team"].league_id != attrs["away_team"].league_id:
             raise serializers.ValidationError("League must be the same for two teams.")
 
         return attrs

@@ -40,7 +40,6 @@ class TeamAdmin(admin.ModelAdmin):
     def get_player_count(self, obj):
         return obj.player_count
 
-
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ('get_full_name', 'team', 'position', 'jersey_number')
@@ -52,12 +51,10 @@ class PlayerAdmin(admin.ModelAdmin):
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}"
 
-
 class MatchResultInline(admin.TabularInline):
     model = MatchResult
     extra = 0
     max_num = 1
-
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):

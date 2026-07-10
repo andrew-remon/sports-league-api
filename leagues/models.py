@@ -130,7 +130,6 @@ class Match(models.Model):
             return None
         return self.result.home_score == self.result.away_score
 
-
     @property
     def score_display(self) -> str:
         if self.status != Match.MatchStatus.COMPLETED:

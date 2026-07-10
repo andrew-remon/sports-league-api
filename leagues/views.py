@@ -1,16 +1,16 @@
-from django.shortcuts import render
-from django.http import JsonResponse, Http404
 from leagues.models import Team, League, Player
 from leagues.services import get_standings
-from django.views.decorators.csrf import csrf_exempt
 from leagues.serializers import *
-from rest_framework.generics import ListCreateAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework import status
-import json
+# import json
+# from django.shortcuts import render
+# from django.http import JsonResponse, Http404
+# from django.views.decorators.csrf import csrf_exempt
+# from rest_framework.generics import ListCreateAPIView
+# from rest_framework.renderers import JSONRenderer
 
 # ------------- Old Representation - Django Views Functions --------------------
 # @csrf_exempt # we use this decorator to bypass the csrf so Django could perform POST methods
@@ -96,10 +96,15 @@ class LeagueViewSet(ModelViewSet):
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
 
+    def get_serializer_class(self):
+        if self.action == 'standings':
+            return StandingsSerializer
+        return super().get_serializer_class()
+
     @action(detail=True, methods=['get'])
     def standings(self, request, pk=None):
         standings = get_standings(pk)
-        serializer = StandingsSerializer(standings, many=True)
+        serializer = self.get_serializer(standings, many=True) # many=true returns a ListSerializer
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TeamViewSet(ModelViewSet):
@@ -107,16 +112,22 @@ class TeamViewSet(ModelViewSet):
     serializer_class = TeamSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset() # Team.objects.all()
         league_id = self.request.query_params.get("league")
         if league_id:
             queryset = queryset.filter(league__id=league_id)
         return queryset.select_related("league").prefetch_related("players")
 
+    def get_serializer_class(self):
+        if self.action == 'players':
+            return PlayerSerializer
+        return super().get_serializer_class()
+
     @action(detail=True, methods=['get'])
     def players(self, request, pk=None):
         players = Player.objects.filter(team__pk=pk).select_related("team__league")
-        serializer = PlayerSerializer(players, many=True)
+        # we use get_serializer method to preserve the context(request, formal, view)
+        serializer = self.get_serializer(players, many=True) # was: PlayerSerializer(players, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PlayerViewSet(ModelViewSet):
@@ -138,14 +149,17 @@ class MatchViewSet(ModelViewSet):
     serializer_class = MatchSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset() # refers to Match.objects.all()
         league_id = self.request.query_params.get("league")
         status = self.request.query_params.get("match_status")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
         if status:
             queryset = queryset.filter(status = status)
-        return queryset.select_related("league", "home_team", "away_team", "result")
+
+        # return queryset.select_related("league", "home_team", "away_team", "result")
+
+        return queryset.select_related("result") # other fields are only used by their pk (which is inside the match row in DB, no JOIN needed)
 
 @action(detail=True, methods=['post'])
 def record_result(self, request, pk=None):
