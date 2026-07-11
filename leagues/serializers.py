@@ -52,7 +52,7 @@ class PlayerSerializer(serializers.ModelSerializer):
         return representation
 
 class MatchResultSerializer(serializers.ModelSerializer):
-    match = serializers.PrimaryKeyRelatedField(queryset=Match.objects.all())
+    match = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = MatchResult

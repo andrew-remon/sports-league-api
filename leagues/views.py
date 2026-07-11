@@ -151,11 +151,11 @@ class MatchViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset() # refers to Match.objects.all()
         league_id = self.request.query_params.get("league")
-        status = self.request.query_params.get("match_status")
+        match_status = self.request.query_params.get("match_status")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
         if status:
-            queryset = queryset.filter(status = status)
+            queryset = queryset.filter(status = match_status)
 
         # return queryset.select_related("league", "home_team", "away_team", "result")
 
@@ -166,6 +166,8 @@ class MatchViewSet(ModelViewSet):
         match = self.get_object()
         serializer = MatchResultSerializer(data=request.data) # deserialization
         serializer.is_valid(raise_exception=True)
+        # first match: refer to the field in MatchResultSerializer, should be the same name, as this will be the kwarg key before saving.
+        # second match: the match variable in this method
         serializer.save(match=match)
         match.status = Match.MatchStatus.COMPLETED
         match.save()
