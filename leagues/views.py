@@ -161,12 +161,13 @@ class MatchViewSet(ModelViewSet):
 
         return queryset.select_related("result") # other fields are only used by their pk (which is inside the match row in DB, no JOIN needed)
 
-@action(detail=True, methods=['post'])
-def record_result(self, request, pk=None):
-    match = self.get_object()
-    serializer = MatchResultSerializer(data=request.data) # deserialization
-    serializer.is_valid(raise_exception=True)
-    serializer.save(match=match)
-    match.status = Match.MatchStatus.COMPLETED
-    match.save()
-    return Response(serializer.data, status=status.HTTP_201_CREATED) # serialization
+    @action(detail=True, methods=['post'])
+    def record_result(self, request, pk=None):
+        match = self.get_object()
+        serializer = MatchResultSerializer(data=request.data) # deserialization
+        serializer.is_valid(raise_exception=True)
+        serializer.save(match=match)
+        match.status = Match.MatchStatus.COMPLETED
+        match.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED) # serialization
+
