@@ -14,7 +14,7 @@
 → Is designed by default to serialize one object at a time.
 → Using `many=true` implies that this data is iterable/a collection. so to_representation() method inside BaseSerializer runs once per item.
 → In the project: PlayerSerializer.to_representation() → calls TeamSerializer(instance.team).data → which itself calls LeagueSerializer(instance.league).data.
-
+→ any field whose value is derived from the URL, request.user, or view logic — not from the request body — should be read_only=True on the serializer.
 ---
 
 ## URLs
@@ -27,6 +27,9 @@ league-standings  → GET /leagues/{pk}/standings/   (from your @action)
 team-list         → GET/POST /teams/
 team-detail       → GET/PUT/PATCH/DELETE /teams/{pk}/
 team-players      → GET /teams/{pk}/players/   (from your @action)
+
+If you need *multiple independent search params* — e.g. searching team name and player name separately in the same request, then in get_queryset() method, we define **self.request.query_params.get()**, otherwise use **Search Filter**
+
 
 ---
 

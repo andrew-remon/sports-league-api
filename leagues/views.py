@@ -1,10 +1,12 @@
 from leagues.models import Team, League, Player
 from leagues.services import get_standings
 from leagues.serializers import *
+from leagues.filters import TeamFilter, PlayerFilter, MatchFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 # import json
 # from django.shortcuts import render
 # from django.http import JsonResponse, Http404
@@ -95,12 +97,22 @@ from rest_framework import status
 class LeagueViewSet(ModelViewSet):
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
+    ordering_fields = ['name', 'created_at']
+    search_fields = ['name']
 
     def get_serializer_class(self):
         if self.action == 'standings':
             return StandingsSerializer
         return super().get_serializer_class()
 
+    @extend_schema(
+        summary="Create standings table for a specific league.",
+        description="Calculates every team record stats, then serializes each record by StandingsSerializer and creates the standings table.",
+        responses={
+            200: StandingsSerializer(many=True),
+            404: OpenApiResponse(description="League ID not found")
+        }
+    )
     @action(detail=True, methods=['get'])
     def standings(self, request, pk=None):
         standings = get_standings(pk)
@@ -110,6 +122,9 @@ class LeagueViewSet(ModelViewSet):
 class TeamViewSet(ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
+    filterset_class = TeamFilter
+    ordering_fields = ['name', 'founded_year']
+    search_fields = ['name', 'city']
 
     def get_queryset(self):
         queryset = super().get_queryset() # Team.objects.all()
@@ -123,6 +138,14 @@ class TeamViewSet(ModelViewSet):
             return PlayerSerializer
         return super().get_serializer_class()
 
+    @extend_schema(
+        summary="Show all players of a specific team",
+        description="Filters from players table with the specific team ID, then shows each player record",
+        responses= {
+            200: PlayerSerializer(many=True),
+            404: OpenApiResponse(description="Team ID not found")
+        }
+    )
     @action(detail=True, methods=['get'])
     def players(self, request, pk=None):
         players = Player.objects.filter(team__pk=pk).select_related("team__league")
@@ -133,6 +156,9 @@ class TeamViewSet(ModelViewSet):
 class PlayerViewSet(ModelViewSet):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
+    filterset_class = PlayerFilter
+    ordering_fields = ['last_name', 'jersey_number']
+    search_fields = ['first_name', 'last_name']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -147,20 +173,33 @@ class PlayerViewSet(ModelViewSet):
 class MatchViewSet(ModelViewSet):
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
+    filterset_class = MatchFilter
+    ordering_fields = ['scheduled_date', 'match_day']
+    search_fields = ['home_team__name', 'away_team__name']
 
     def get_queryset(self):
         queryset = super().get_queryset() # refers to Match.objects.all()
         league_id = self.request.query_params.get("league")
-        match_status = self.request.query_params.get("match_status")
+        # match_status = self.request.query_params.get("match_status")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
-        if status:
-            queryset = queryset.filter(status = match_status)
+        # if match_status:
+        #     queryset = queryset.filter(status = match_status)
 
         # return queryset.select_related("league", "home_team", "away_team", "result")
 
         return queryset.select_related("result") # other fields are only used by their pk (which is inside the match row in DB, no JOIN needed)
 
+    @extend_schema(
+        summary="Record Match Score Result",
+        description="Submits the final score for a scheduled match. This marks the match status as COMPLETED and creates the associated MatchResult record.",
+        request=MatchResultSerializer,
+        responses={
+            201: MatchResultSerializer,
+            400: OpenApiResponse(description="Invalid request payload (e.g, negative scores, invalid match ID)"),
+            404: OpenApiResponse(description="Match Not Found")
+        }
+    )
     @action(detail=True, methods=['post'])
     def record_result(self, request, pk=None):
         match = self.get_object()

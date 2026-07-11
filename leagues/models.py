@@ -62,6 +62,8 @@ class Player(models.Model):
 
 class Match(models.Model):
     class MatchStatus(models.TextChoices):
+    #   ^attr        ^value      ^label (admin panel)
+    # Python-only   DB value   Display-only -> DB value used in query parameters
         SCHEDULED = "scheduled", "Scheduled"
         IN_PROGRESS = "in_progress", "In Progress"
         COMPLETED = "completed", "Completed"
