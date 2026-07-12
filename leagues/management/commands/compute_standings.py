@@ -1,4 +1,7 @@
+# third-party
 from django.core.management.base import BaseCommand, CommandError
+
+# local
 from leagues.models import League
 from leagues.services import get_standings
 

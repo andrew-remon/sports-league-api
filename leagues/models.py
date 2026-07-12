@@ -1,6 +1,9 @@
+# third-party
 from django.db import models
-from utils.exceptions import ValidationError
 from django.db.models import Q, F
+
+# local
+from utils.exceptions import ValidationError
 
 # Create your models here.
 class League(models.Model):

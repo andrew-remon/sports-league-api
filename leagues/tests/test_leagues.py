@@ -1,7 +1,10 @@
+# third-party
 from django.urls import reverse
 from rest_framework import status
-from leagues.models import League
 import pytest
+
+# local
+from leagues.models import League
 
 @pytest.mark.django_db
 def test_list_league(api_client, sample_league):

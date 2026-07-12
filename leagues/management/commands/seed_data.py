@@ -1,5 +1,8 @@
+# third-party
 from django.core.management.base import BaseCommand
-from leagues.models import *
+
+# local
+from leagues.models import League, Match, Team, Player, MatchResult
 
 class Command(BaseCommand):
     help = "seeds the database with inital leagues, teams and players."
@@ -355,7 +358,6 @@ class Command(BaseCommand):
         )
 
         # ----------------- Matches Creation ---------------------
-
         m1, _ = Match.objects.get_or_create(
             league=premier_league,
             home_team = man_city,
@@ -623,5 +625,5 @@ class Command(BaseCommand):
             home_score=1,
             away_score=4,
         )
-        
+
         self.stdout.write(self.style.SUCCESS("Database Seeding Completed Successfully!"))

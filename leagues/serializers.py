@@ -1,4 +1,7 @@
+# third-party
 from rest_framework import serializers
+
+# local
 from leagues.models import League, Team, Player, MatchResult, Match
 
 class LeagueSerializer(serializers.ModelSerializer):

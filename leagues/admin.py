@@ -1,6 +1,9 @@
+# third-party
 from django.contrib import admin, messages
 from django.db.models import Count
-from .models import *
+
+# local
+from leagues.models import League, Team, Player, Match, MatchResult
 
 # Register your models here.
 class TeamInline(admin.TabularInline):

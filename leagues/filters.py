@@ -1,4 +1,7 @@
+# third-party
 from django_filters import rest_framework as filters
+
+# local
 from leagues.models import Team, Player, Match
 
 class TeamFilter(filters.FilterSet):

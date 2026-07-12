@@ -1,6 +1,9 @@
+# third-party
 from django.core.management.base import BaseCommand
+
+# local
 from django.db.models import Count
-from leagues.models import Team, League, Player
+from leagues.models import Team, Player
 
 
 class Command(BaseCommand):

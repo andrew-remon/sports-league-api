@@ -1,6 +1,9 @@
-from django.db.models import Count, Sum, Value, F, Q, OuterRef, Subquery, IntegerField
+# third-party
+from django.db.models import Count, Sum, F, OuterRef, Subquery, IntegerField
 from django.db.models.functions import Coalesce
-from leagues.models import Team, Match, MatchResult
+
+# local
+from leagues.models import Team, Match
 
 def get_standings(league_id):
     teams = Team.objects.filter(league_id=league_id)

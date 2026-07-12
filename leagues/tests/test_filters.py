@@ -1,8 +1,13 @@
+# stdlib
 from datetime import timedelta
+
+# third-party
 from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 import pytest
+
+# local
 from leagues.models import Match
 
 @pytest.mark.django_db

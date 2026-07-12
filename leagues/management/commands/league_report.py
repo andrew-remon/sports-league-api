@@ -1,7 +1,9 @@
+# third-party
 from django.core.management.base import BaseCommand, CommandError
+
+# local
 from leagues.models import League, Match
 from leagues.services import get_standings
-from django.db.models import Count
 
 class Command(BaseCommand):
     help = "Computes and prints the league info, current standing table and the upcoming matches."

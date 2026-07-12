@@ -1,3 +1,4 @@
+# local
 import exceptions
 
 def validate_team_name(name: str) -> bool:

@@ -1,6 +1,9 @@
+# third-party
 from django.urls import path, include
-from leagues.views import *
 from rest_framework.routers import DefaultRouter
+
+# local
+from leagues.views import LeagueViewSet, TeamViewSet, PlayerViewSet, MatchViewSet
 
 router = DefaultRouter()
 router.register(r'leagues', LeagueViewSet)
