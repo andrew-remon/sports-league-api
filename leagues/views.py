@@ -131,11 +131,7 @@ class TeamViewSet(ModelViewSet):
     search_fields = ['name', 'city']
 
     def get_queryset(self):
-        queryset = super().get_queryset() # Team.objects.all()
-        league_id = self.request.query_params.get("league")
-        if league_id:
-            queryset = queryset.filter(league__id=league_id)
-        return queryset.select_related("league").prefetch_related("players")
+        return super().get_queryset().select_related("league").prefetch_related("players")
 
     def get_serializer_class(self):
         if self.action == 'players':
@@ -184,14 +180,10 @@ class MatchViewSet(ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset() # refers to Match.objects.all()
         league_id = self.request.query_params.get("league")
-        # match_status = self.request.query_params.get("match_status")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
-        # if match_status:
-        #     queryset = queryset.filter(status = match_status)
 
         # return queryset.select_related("league", "home_team", "away_team", "result")
-
         return queryset.select_related("result") # other fields are only used by their pk (which is inside the match row in DB, no JOIN needed)
 
     @extend_schema(
