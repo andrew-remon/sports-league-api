@@ -5,19 +5,16 @@ from django.core.management.base import BaseCommand, CommandError
 from leagues.models import League
 from leagues.services import get_standings
 
+
 class Command(BaseCommand):
     help = "Computes and prints the standings table for a specific league."
 
     def add_arguments(self, parser):
         # This tells Django to expect a league_id argument
-        parser.add_argument(
-            'league_id',
-            type=int,
-            help='The database ID of the league'
-        )
+        parser.add_argument("league_id", type=int, help="The database ID of the league")
 
     def handle(self, *args, **options):
-        league_id = options['league_id']
+        league_id = options["league_id"]
 
         # 1. Error Handling: Check if league exists
         try:

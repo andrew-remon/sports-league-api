@@ -5,15 +5,12 @@ from django.core.management.base import BaseCommand, CommandError
 from leagues.models import League, Match
 from leagues.services import get_standings
 
+
 class Command(BaseCommand):
     help = "Computes and prints the league info, current standing table and the upcoming matches."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            'league_name',
-            type=str,
-            help="The League name"
-        )
+        parser.add_argument("league_name", type=str, help="The League name")
 
     def get_league(self, league_name):
         try:
@@ -57,5 +54,3 @@ class Command(BaseCommand):
         self.print_league_info(league)
         get_standings(league.id)
         self.get_upcoming_matches(league)
-
-

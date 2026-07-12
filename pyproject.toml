@@ -1,0 +1,11 @@
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip = ["migrations"]
+known_django = ["django"]
+known_first_party = ["leagues"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]

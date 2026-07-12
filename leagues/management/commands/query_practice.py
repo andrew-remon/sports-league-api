@@ -14,11 +14,10 @@ class Command(BaseCommand):
         queries = [
             Team.objects.filter(league__name="Premier League"),
             Player.objects.filter(position=Player.Position.FORWARD),
-            Team.objects.annotate(player_count=Count('players')).filter(player_count__gt=0),
+            Team.objects.annotate(player_count=Count("players")).filter(player_count__gt=0),
             Player.objects.filter(team__name=specificTeam),
         ]
         for queryset in queries:
             self.stdout.write(str(queryset))
             self.stdout.write(str(queryset.query))
             self.stdout.write("--------------------------")
-

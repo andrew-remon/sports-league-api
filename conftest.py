@@ -5,29 +5,28 @@ from rest_framework.test import APIClient
 # local
 from leagues.models import League, Team, Player, Match
 
+
 @pytest.fixture
 def api_client():
     return APIClient()
 
+
 @pytest.fixture
 def sample_league(db):
     def _create_league(name, max_teams, **kwargs):
-        return League.objects.create(
-            name=name,
-            max_teams=max_teams,
-            **kwargs)
+        return League.objects.create(name=name, max_teams=max_teams, **kwargs)
+
     return _create_league
+
 
 @pytest.fixture
 def sample_team(db):
     def _create_team(name, league, city, **kwargs):
         league = league or sample_league()
-        return Team.objects.create(
-            name=name,
-            league=league,
-            city=city,
-            **kwargs)
+        return Team.objects.create(name=name, league=league, city=city, **kwargs)
+
     return _create_team
+
 
 @pytest.fixture
 def sample_player(db):
@@ -38,8 +37,11 @@ def sample_player(db):
             team=team,
             jersey_number=jersey_number,
             position=position,
-            **kwargs)
+            **kwargs,
+        )
+
     return _create_player
+
 
 @pytest.fixture
 def sample_match(db):
@@ -51,6 +53,7 @@ def sample_match(db):
             match_day=match_day,
             status=status,
             scheduled_date=scheduled_date,
-            **kwargs
+            **kwargs,
         )
+
     return _create_match

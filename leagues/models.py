@@ -5,6 +5,7 @@ from django.db.models import Q, F
 # local
 from utils.exceptions import ValidationError
 
+
 # Create your models here.
 class League(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -22,18 +23,15 @@ class Team(models.Model):
     league = models.ForeignKey(
         League,
         on_delete=models.CASCADE,
-        related_name="teams",)
+        related_name="teams",
+    )
     founded_year = models.PositiveIntegerField(null=True, blank=True)
     city = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["name", "league"],
-                name="unique_team_name_in_league")
-            ]
+        constraints = [models.UniqueConstraint(fields=["name", "league"], name="unique_team_name_in_league")]
 
     def __str__(self):
         return self.name
@@ -53,7 +51,8 @@ class Player(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="players",)
+        related_name="players",
+    )
     jersey_number = models.PositiveIntegerField()
     position = models.CharField(max_length=3, choices=Position.choices)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -65,8 +64,8 @@ class Player(models.Model):
 
 class Match(models.Model):
     class MatchStatus(models.TextChoices):
-    #   ^attr        ^value      ^label (admin panel)
-    # Python-only   DB value   Display-only -> DB value used in query parameters
+        #   ^attr        ^value      ^label (admin panel)
+        # Python-only   DB value   Display-only -> DB value used in query parameters
         SCHEDULED = "scheduled", "Scheduled"
         IN_PROGRESS = "in_progress", "In Progress"
         COMPLETED = "completed", "Completed"
@@ -99,7 +98,7 @@ class Match(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=~Q(home_team=F("away_team")),
-                name= "different_teams_per_match",
+                name="different_teams_per_match",
             )
         ]
 
@@ -113,7 +112,7 @@ class Match(models.Model):
         if self.home_team.league != self.league or self.away_team.league != self.league:
             raise ValidationError("A team can't play in a different league")
 
-    def save(self,*args, **kwargs):
+    def save(self, *args, **kwargs):
         self.full_clean()
         return super().save(*args, **kwargs)
 

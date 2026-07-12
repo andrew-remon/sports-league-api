@@ -7,36 +7,98 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('leagues', '0001_initial'),
+        ("leagues", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Match',
+            name="Match",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('match_day', models.PositiveIntegerField()),
-                ('scheduled_date', models.DateTimeField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('scheduled', 'Scheduled'), ('in_progress', 'In Progress'), ('completed', 'Completed'), ('postponed', 'Postponed')], max_length=15)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('away_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='away_matches', to='leagues.team')),
-                ('home_team', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='home_matches', to='leagues.team')),
-                ('league', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='matches', to='leagues.league')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("match_day", models.PositiveIntegerField()),
+                ("scheduled_date", models.DateTimeField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("scheduled", "Scheduled"),
+                            ("in_progress", "In Progress"),
+                            ("completed", "Completed"),
+                            ("postponed", "Postponed"),
+                        ],
+                        max_length=15,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "away_team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="away_matches",
+                        to="leagues.team",
+                    ),
+                ),
+                (
+                    "home_team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="home_matches",
+                        to="leagues.team",
+                    ),
+                ),
+                (
+                    "league",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="matches",
+                        to="leagues.league",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='MatchResult',
+            name="MatchResult",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('home_score', models.PositiveIntegerField()),
-                ('away_score', models.PositiveIntegerField()),
-                ('recorded_at', models.DateTimeField(auto_now_add=True)),
-                ('match', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='result', to='leagues.match')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("home_score", models.PositiveIntegerField()),
+                ("away_score", models.PositiveIntegerField()),
+                ("recorded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "match",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="result",
+                        to="leagues.match",
+                    ),
+                ),
             ],
         ),
         migrations.AddConstraint(
-            model_name='match',
-            constraint=models.CheckConstraint(condition=models.Q(('home_team', models.F('away_team')), _negated=True), name='different_teams_per_match'),
+            model_name="match",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("home_team", models.F("away_team")), _negated=True),
+                name="different_teams_per_match",
+            ),
         ),
     ]
