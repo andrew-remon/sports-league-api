@@ -224,12 +224,7 @@ class MatchViewSet(ModelViewSet):
         `away_team`, `league` are serialized as plain FK ids — no JOIN
         needed since that data is already on the `Match` row.
         """
-        queryset = super().get_queryset() # refers to Match.objects.all()
-        league_id = self.request.query_params.get("league")
-        if league_id:
-            queryset = queryset.filter(league__id = league_id)
-
-        return queryset.select_related("result")
+        return super().get_queryset().select_related("result")
 
     @extend_schema(
         summary="Record Match Score Result",
