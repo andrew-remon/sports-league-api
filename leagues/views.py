@@ -99,6 +99,13 @@ from leagues.serializers import LeagueSerializer, MatchSerializer, TeamSerialize
 
 # Create your views here.
 class LeagueViewSet(ModelViewSet):
+    """
+    Manage leagues and expose computed standings.
+
+    Standings are not a stored field — they're computed on read
+    via `get_standings()` and serialized with StandingsSerializer,
+    which is why `get_serializer_class` branches on `self.action`.
+    """
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
     ordering_fields = ['name', 'created_at']
@@ -124,6 +131,20 @@ class LeagueViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TeamViewSet(ModelViewSet):
+    """
+    Manage Teams and display full list of a specific Team's players.
+
+    `league` filtering is handled declaratively by `TeamFilter`
+    (see `filterset_class`), not in `get_queryset`.
+
+    `get_queryset` only applies `select_related("league")` and
+    `prefetch_related("players")` — these don't filter rows, they
+    optimize the SQL executed for `TeamSerializer`'s nested fields.
+
+    `players` action returns the full player list for a single team,
+    serialized with `PlayerSerializer` — this is why
+    `get_serializer_class` branches on `self.action`.
+    """
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     filterset_class = TeamFilter
@@ -154,6 +175,12 @@ class TeamViewSet(ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PlayerViewSet(ModelViewSet):
+    """
+    Manage Players with filtering, search and ordering.
+
+    'position' and 'team' filtering is handled declaratively by
+    `PlayerFilter` (see `filterset_class`), not in `get_queryset`.
+    """
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
     filterset_class = PlayerFilter
@@ -161,6 +188,13 @@ class PlayerViewSet(ModelViewSet):
     search_fields = ['first_name', 'last_name']
 
     def get_queryset(self):
+        """
+        Return players with `team__league` pre-joined via select_related.
+
+        `PlayerSerializer` traverses two FK levels (player -> team -> league).
+        Depth here must match serializer field depth — if the serializer
+        starts nesting further, this needs to go deeper too.
+        """
         queryset = super().get_queryset()
         team_id = self.request.query_params.get("team")
         position = self.request.query_params.get("position")
@@ -171,6 +205,16 @@ class PlayerViewSet(ModelViewSet):
         return queryset.select_related("team__league")
 
 class MatchViewSet(ModelViewSet):
+    """
+    Manage matches with filtering, ordering, searching.
+
+    'league' filtering is handled declaratively by `MatchFilter`
+    (see `filterset_class`), not in `get_queryset`.
+
+    `record_result` (see `@action`) mutates `match.status` to
+    COMPLETED and creates the associated `MatchResult` — this is
+    the only state-changing custom action in this ViewSet.
+    """
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
     filterset_class = MatchFilter
@@ -178,13 +222,20 @@ class MatchViewSet(ModelViewSet):
     search_fields = ['home_team__name', 'away_team__name']
 
     def get_queryset(self):
+        """
+        Return matches with `result` pre-joined via select_related.
+
+        `MatchSerializer` nests `MatchResult` as a full object, which
+        would otherwise trigger one query per row (N+1). `home_team`,
+        `away_team`, `league` are serialized as plain FK ids — no JOIN
+        needed since that data is already on the `Match` row.
+        """
         queryset = super().get_queryset() # refers to Match.objects.all()
         league_id = self.request.query_params.get("league")
         if league_id:
             queryset = queryset.filter(league__id = league_id)
 
-        # return queryset.select_related("league", "home_team", "away_team", "result")
-        return queryset.select_related("result") # other fields are only used by their pk (which is inside the match row in DB, no JOIN needed)
+        return queryset.select_related("result")
 
     @extend_schema(
         summary="Record Match Score Result",
