@@ -191,18 +191,12 @@ class PlayerViewSet(ModelViewSet):
         """
         Return players with `team__league` pre-joined via select_related.
 
+        `get_queryset` applies `select_related("team__league")` because
         `PlayerSerializer` traverses two FK levels (player -> team -> league).
         Depth here must match serializer field depth — if the serializer
         starts nesting further, this needs to go deeper too.
         """
-        queryset = super().get_queryset()
-        team_id = self.request.query_params.get("team")
-        position = self.request.query_params.get("position")
-        if team_id:
-            queryset= queryset.filter(team__id=team_id)
-        if position:
-            queryset= queryset.filter(position=position)
-        return queryset.select_related("team__league")
+        return super().get_queryset().select_related("team__league")
 
 class MatchViewSet(ModelViewSet):
     """
