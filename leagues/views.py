@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from django.db import transaction
 
 # local
 from leagues.models import Team, League, Player, Match
@@ -207,7 +208,8 @@ class MatchViewSet(ModelViewSet):
 
     `record_result` (see `@action`) mutates `match.status` to
     COMPLETED and creates the associated `MatchResult` — this is
-    the only state-changing custom action in this ViewSet.
+    the only state-changing custom action in this ViewSet, if `result` attribute
+    found in match instance, a validation error pops up.
     """
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
@@ -239,12 +241,19 @@ class MatchViewSet(ModelViewSet):
     @action(detail=True, methods=['post'])
     def record_result(self, request, pk=None):
         match = self.get_object()
+
+        if hasattr(match, 'result'):
+            raise serializers.ValidationError("Result already recorded for this match.")
+
         serializer = MatchResultSerializer(data=request.data) # deserialization
         serializer.is_valid(raise_exception=True)
         # first match: refer to the field in MatchResultSerializer, should be the same name, as this will be the kwarg key before saving.
         # second match: the match variable in this method
-        serializer.save(match=match)
-        match.status = Match.MatchStatus.COMPLETED
-        match.save()
+
+        with transaction.atomic():
+            serializer.save(match=match)
+            match.status = Match.MatchStatus.COMPLETED
+            match.save()
+            
         return Response(serializer.data, status=status.HTTP_201_CREATED) # serialization
 
