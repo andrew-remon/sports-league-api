@@ -30,7 +30,8 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["league"] = LeagueSerializer(instance.league).data
+        # add context argument to preserve the request context state, now this is a silent but in the future, we can't add any request info in the serialzer representation
+        representation["league"] = LeagueSerializer(instance.league, context=self.context).data
         return representation
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -51,7 +52,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["team"] = TeamSerializer(instance.team).data
+        representation["team"] = TeamSerializer(instance.team, context=self.context).data
         return representation
 
 class MatchResultSerializer(serializers.ModelSerializer):
