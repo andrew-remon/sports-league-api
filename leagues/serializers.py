@@ -1,5 +1,6 @@
 # third-party
 from rest_framework import serializers
+from django.db import transaction
 
 # local
 from leagues.models import League, Team, Player, MatchResult, Match
@@ -14,49 +15,17 @@ class LeagueSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
-class TeamSerializer(serializers.ModelSerializer):
-    """
-    Serializes Team instances for the public API, including a computed
-    player count and nested league data.
-
-    `league` accepts a league ID on write (PrimaryKeyRelatedField) but
-    `to_representation` overrides output to nest the full LeagueSerializer
-    representation, so reads and writes have different shapes for this field.
-
-    `validate_name` rejects names under two characters after stripping
-    whitespace.
-    """
-
-    league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
-    player_count = serializers.SerializerMethodField()
+class TeamListSerializer(serializers.ModelSerializer):
+    player_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Team
         fields = [
             "id",
             "name",
-            "league",
             "city",
-            "founded_year",
-            "player_count",
-            "created_at",
+            "player_count"
         ]
-
-    def get_player_count(self, obj):
-        # return obj.players.count() # count function hits DB
-        return len(obj.players.all())  # respect prefetch_related() method cache
-
-    def validate_name(self, value):
-        value = value.strip()
-        if len(value) < 2:
-            raise serializers.ValidationError("Team Name must be at least 2 characters.")
-        return value
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        # Pass context through so LeagueSerializer has request access if needed later
-        representation["league"] = LeagueSerializer(instance.league, context=self.context).data
-        return representation
 
 
 class PlayerSerializer(serializers.ModelSerializer):
@@ -69,7 +38,7 @@ class PlayerSerializer(serializers.ModelSerializer):
     `validate_jersey_number` rejects any number less than 1 or greater than 99.
 
     `team` accepts a team ID on write (PrimaryKeyRelatedField) but
-    `to_representation` overrides output to nest the full TeamSerializer
+    `to_representation` overrides output to nest the full TeamDetailSerializer
     representation (which itself nests League), so reads and writes have
     different shapes for this field.]
     """
@@ -100,7 +69,35 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["team"] = TeamSerializer(instance.team, context=self.context).data
+        representation["team"] = TeamDetailSerializer(instance.team, context=self.context).data
+        return representation
+
+
+class TeamDetailSerializer(serializers.ModelSerializer):
+    players = PlayerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Team
+        fields = [
+            "id",
+            "name",
+            "league",
+            "city",
+            "founded_year",
+            "created_at",
+            "players",
+        ]
+
+    def validate_name(self, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise serializers.ValidationError("Team Name must be at least 2 characters.")
+        return value
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Pass context through so LeagueSerializer has request access if needed later
+        representation["league"] = LeagueSerializer(instance.league, context=self.context).data
         return representation
 
 
@@ -132,7 +129,7 @@ class MatchSerializer(serializers.ModelSerializer):
     `home_team` and `away_team` are always present in `attrs`.
     """
 
-    result = MatchResultSerializer(read_only=True)
+    result = MatchResultSerializer(required=False, allow_null=True)
     league = serializers.PrimaryKeyRelatedField(queryset=League.objects.all())
     home_team = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all())
     away_team = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all())
@@ -149,6 +146,21 @@ class MatchSerializer(serializers.ModelSerializer):
             "status",
             "result",
         ]
+        read_only_fields = ["status"]
+
+    def create(self, validated_data):
+        match = None
+        result_data = validated_data.pop('result', None)
+        if result_data is not None:
+            with transaction.atomic():
+                validated_data['status'] = Match.MatchStatus.COMPLETED
+                match = Match.objects.create(**validated_data)
+                MatchResult.objects.create(match=match, **result_data)
+        else:
+            validated_data['status'] = Match.MatchStatus.SCHEDULED
+            match = Match.objects.create(**validated_data)
+
+        return match
 
     def validate(self, attrs):
         if attrs["home_team"] == attrs["away_team"]:

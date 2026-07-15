@@ -5,18 +5,20 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from django.db import transaction
+from django.db.models import Count
 
 # local
-from leagues.models import Team, League, Player, Match
+from leagues.models import Team, League, Player, Match, MatchResult
 from leagues.services import get_standings
 from leagues.filters import TeamFilter, PlayerFilter, MatchFilter
 from leagues.serializers import (
     LeagueSerializer,
     MatchSerializer,
-    TeamSerializer,
     PlayerSerializer,
     MatchResultSerializer,
     StandingsSerializer,
+    TeamListSerializer,
+    TeamDetailSerializer,
 )
 
 
@@ -65,7 +67,7 @@ class TeamViewSet(ModelViewSet):
 
     `get_queryset` only applies `select_related("league")` and
     `prefetch_related("players")` — these don't filter rows, they
-    optimize the SQL executed for `TeamSerializer`'s nested fields.
+    optimize the SQL executed for `TeamDetailSerializer`'s nested fields.
 
     `players` action returns the full player list for a single team,
     serialized with `PlayerSerializer` — this is why
@@ -73,17 +75,21 @@ class TeamViewSet(ModelViewSet):
     """
 
     queryset = Team.objects.all()
-    serializer_class = TeamSerializer
+    serializer_class = TeamDetailSerializer
     filterset_class = TeamFilter
     ordering_fields = ["name", "founded_year"]
     search_fields = ["name", "city"]
 
     def get_queryset(self):
+        if self.action == "list":
+            return super().get_queryset().annotate(player_count=Count("players"))
         return super().get_queryset().select_related("league").prefetch_related("players")
 
     def get_serializer_class(self):
         if self.action == "players":
             return PlayerSerializer
+        if self.action == "list":
+            return TeamListSerializer
         return super().get_serializer_class()
 
     @extend_schema(
@@ -173,10 +179,10 @@ class MatchViewSet(ModelViewSet):
     def record_result(self, request, pk=None):
         match = self.get_object()
 
-        if hasattr(match, "result"):
-            raise serializers.ValidationError("Result already recorded for this match.")
+        if MatchResult.objects.filter(match=match).exists():
+            return Response(data={"detail": "A result already exists for this match."}, status=status.HTTP_409_CONFLICT)
 
-        serializer = MatchResultSerializer(data=request.data)  # deserialization
+        serializer = MatchResultSerializer(data=request.data, context=self.get_serializer_context())  # deserialization
         serializer.is_valid(raise_exception=True)
         # first match: refer to the field in MatchResultSerializer,
         # should be the same name, as this will be the kwarg key before saving.
