@@ -13,8 +13,25 @@
 ## Serializers
 → Is designed by default to serialize one object at a time.
 → Using `many=true` implies that this data is iterable/a collection. so to_representation() method inside BaseSerializer runs once per item.
-→ In the project: PlayerSerializer.to_representation() → calls TeamSerializer(instance.team).data → which itself calls LeagueSerializer(instance.league).data.
+→ In the project: PlayerSerializer.to_representation() → calls TeamDetailSerializer(instance.team).data → which itself calls LeagueSerializer(instance.league).data.
 → any field whose value is derived from the URL, request.user, or view logic — not from the request body — should be read_only=True on the serializer.
+
+→ DRF Serializer Internals
+```text
+is_valid()
+ └─ run_validation(initial_data)
+      └─ to_internal_value(data)                     # serializer-level orchestrator
+           for each field:
+             ├─ field.run_validation(raw_value)       # FIELD-LEVEL
+             │    ├─ validate_empty_values()
+             │    ├─ field.to_internal_value()
+             │    └─ field.validators (run_validators)
+             └─ validate_<field_name>(value)           # SERIALIZER-LEVEL, per-field
+      └─ run_validators(value)                         # serializer.validators (class Meta level, rare)
+      └─ self.validate(attrs)                          # OBJECT-LEVEL, cross-field
+ └─ self._validated_data = attrs   (if no errors raised anywhere above)
+```
+
 ---
 
 ## URLs
