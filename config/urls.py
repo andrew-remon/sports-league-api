@@ -23,7 +23,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
-
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 # this is the function that runs whenever we inspect api/health/ URL
 def health_check(request):
@@ -46,4 +46,4 @@ urlpatterns = [
     path("api/health/", health_check, name="health_check"),  # define the new URL and map it 'health_check' function
     path("api/", include("leagues.urls")),
     path("api/", include(extrapatters)),
-]
+] + debug_toolbar_urls()

@@ -10,13 +10,13 @@ class Command(BaseCommand):
     help = "Computes and prints the league info, current standing table and the upcoming matches."
 
     def add_arguments(self, parser):
-        parser.add_argument("league_name", type=str, help="The League name")
+        parser.add_argument("league_name", type=str, help="The League Name")
 
     def get_league(self, league_name):
         try:
             league = League.objects.get(name=league_name)
         except League.DoesNotExist:
-            raise CommandError(f"League with ID {league_name} does not exist.")
+            raise CommandError(f"League with name {league_name} does not exist.")
         return league
 
     def print_league_info(self, league):

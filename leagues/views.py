@@ -102,7 +102,7 @@ class TeamViewSet(ModelViewSet):
     )
     @action(detail=True, methods=["get"])
     def players(self, request, pk=None):
-        players = Player.objects.filter(team__pk=pk).select_related("team__league")
+        players = Player.objects.filter(team__pk=pk).select_related("team")
         # we use get_serializer method to preserve the context(request, formal, view)
         serializer = self.get_serializer(players, many=True)  # was: PlayerSerializer(players, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -131,7 +131,7 @@ class PlayerViewSet(ModelViewSet):
         Depth here must match serializer field depth — if the serializer
         starts nesting further, this needs to go deeper too.
         """
-        return super().get_queryset().select_related("team__league")
+        return super().get_queryset().select_related("team")
 
 
 class MatchViewSet(ModelViewSet):
@@ -162,7 +162,7 @@ class MatchViewSet(ModelViewSet):
         `away_team`, `league` are serialized as plain FK ids — no JOIN
         needed since that data is already on the `Match` row.
         """
-        return super().get_queryset().select_related("result")
+        return super().get_queryset().select_related("result") # reverse OneToOne field - only exception to use with select_related()
 
     @extend_schema(
         summary="Record Match Score Result",

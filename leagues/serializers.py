@@ -69,7 +69,7 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["team"] = TeamDetailSerializer(instance.team, context=self.context).data
+        representation["team"] = TeamListSerializer(instance.team, context=self.context).data
         return representation
 
 
