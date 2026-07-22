@@ -58,6 +58,11 @@ class Player(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["team", "position"], name="player_team_position_idx"),
+        ]
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
@@ -101,6 +106,11 @@ class Match(models.Model):
                 name="different_teams_per_match",
             )
         ]
+        indexes = [
+            models.Index(fields=["league", "status"], name="match_league_status_idx"),
+            models.Index(fields=["league", "match_day"], name="match_league_matchday_idx"),
+        ]
+
 
     def __str__(self):
         return f"{self.home_team} VS {self.away_team}"
