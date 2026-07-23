@@ -11,6 +11,7 @@
 ---
 
 ## Serializers
+
 → Is designed by default to serialize one object at a time.
 → Using `many=true` implies that this data is iterable/a collection. so to_representation() method inside BaseSerializer runs once per item.
 → In the project: PlayerSerializer.to_representation() → calls TeamDetailSerializer(instance.team).data → which itself calls LeagueSerializer(instance.league).data.
@@ -62,3 +63,41 @@ That's why in this method **we define all fields that will be used by the serial
 3. Does to_representation() call another serializer? → follow that chain, join needs to cover every hop.
 4. Does a SerializerMethodField call .count()? → prefetch is useless, .count() always hits DB fresh. Use len(obj.related.all()) if you want the prefetch cache respected.
 5. Match select_related/prefetch_related depth to the deepest traversal found in steps 2–4, not to every FK the model happens to have.
+
+
+#### The request/response lifecycle skeleton
+
+```text
+1. WSGI/ASGI server (runserver / gunicorn) receives raw HTTP
+2. Django's WSGIHandler.__call__() → builds HttpRequest
+3. Middleware stack (request phase, top→bottom in MIDDLEWARE list)
+4. URL resolver (urls.py) → matches path to a view
+5. DRF APIView.dispatch() ← THIS is where DRF takes over from Django
+   ├─ self.initial(request) → runs authentication, permissions, throttling
+   ├─ handler = getattr(self, request.method.lower())  # e.g. self.post
+   └─ response = handler(request, *args, **kwargs)
+6. Inside your ViewSet method (e.g. create() from CreateModelMixin):
+   ├─ serializer = self.get_serializer(data=request.data)
+   ├─ serializer.is_valid(raise_exception=True)
+   │    └─ runs validate_<field>() → validate() → collects errors
+   ├─ self.perform_create(serializer)
+   │    └─ serializer.save() → calls serializer.create()
+   └─ return Response(serializer.data, status=201)
+7. Middleware stack (response phase, bottom→top)
+8. WSGIHandler converts HttpResponse back to raw HTTP
+```
+
+```text
+1. URL resolves → router maps it to ViewSet class
+2. New instance created, request attached
+3. dispatch() runs on that instance
+4. dispatch() determines HTTP verb → looks up mapped method name (e.g. "create")
+5. dispatch() CALLS that method (e.g. self.create(request))
+   → this call IS the mixin executing — not a separate later step
+6. INSIDE that method, serialization happens:
+   - get_serializer(data=request.data)
+   - is_valid()
+   - save()
+7. Method returns a Response object
+8. dispatch() returns that Response
+```
