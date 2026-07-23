@@ -1,6 +1,6 @@
 # third-party
-from django.db.models import Count, Sum, F, OuterRef, Subquery, IntegerField
-from django.db.models.functions import Coalesce
+from django.db.models import Count, Sum, F, OuterRef, Subquery, IntegerField, Window
+from django.db.models.functions import Coalesce, DenseRank
 
 # local
 from leagues.models import Team, Match
@@ -74,8 +74,20 @@ def get_standings(league_id):
         points=F("won") * 3 + F("drawn"),
     )
 
-    # Step 3: Order and return the exact values dict
-    return teams.order_by("-points", "-goal_difference", "-goals_for").values(
+    # ! Step 3: Create the dynamic Window Rank
+    teams = teams.annotate(
+       rank=Window(
+            DenseRank(),
+            order_by=[
+                F("points").desc(),
+                F("goal_difference").desc(),
+                F("goals_for").desc()
+            ]
+        )
+    )
+
+    # Step 4: return the exact values dict ordered by 'rank'
+    return teams.values(
         team_name=F("name"),
         played=F("played"),
         won=F("won"),
@@ -85,4 +97,18 @@ def get_standings(league_id):
         goals_against=F("goals_against"),
         goal_difference=F("goal_difference"),
         points=F("points"),
-    )
+        rank=F("rank"),
+    ).order_by("rank")
+
+    # ? Old Approach: Python-level sorting and computation
+    # return teams.order_by("-points", "-goal_difference", "-goals_for").values(
+    #     team_name=F("name"),
+    #     played=F("played"),
+    #     won=F("won"),
+    #     drawn=F("drawn"),
+    #     lost=F("lost"),
+    #     goals_for=F("goals_for"),
+    #     goals_against=F("goals_against"),
+    #     goal_difference=F("goal_difference"),
+    #     points=F("points"),
+    # )
