@@ -1,4 +1,4 @@
-.PHONY: install migrate seed test run lint format
+.PHONY: install migrate seed test run lint format shell
 
 install:
 	pip install -r requirements.txt
@@ -23,3 +23,6 @@ format:
 	black .
 
 check: format lint test
+
+shell:
+	python manage.py shell
