@@ -7,6 +7,7 @@ from leagues.models import Team, Match
 
 
 def get_standings(league_id):
+    # use .filter (DB level) instead of Python Iteration
     teams = Team.objects.filter(league_id=league_id)
 
     # --- Subqueries for Home Matches ---
