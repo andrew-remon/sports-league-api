@@ -138,6 +138,7 @@ The project includes a `Makefile` with helper commands for common actions:
 - `make lint` - Lint files with flake8
 - `make format` - Format files with black
 - `make check` - Run format, lint, and tests sequentially
+- `make shell` - Open Django Shell in terminal
 
 ---
 
