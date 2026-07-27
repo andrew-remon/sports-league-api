@@ -46,4 +46,5 @@ urlpatterns = [
     path("api/health/", health_check, name="health_check"),  # define the new URL and map it 'health_check' function
     path("api/", include("leagues.urls")),
     path("api/", include(extrapatters)),
+    path("api/v1/auth/", include("accounts.urls"))
 ] + debug_toolbar_urls()
