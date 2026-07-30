@@ -2,6 +2,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status, serializers
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from django.db import transaction
@@ -20,7 +21,7 @@ from leagues.serializers import (
     TeamListSerializer,
     TeamDetailSerializer,
 )
-
+from leagues.permissions import IsLeagueOwnerOrReadOnly, IsMatchLeagueOwnerOrReadOnly, IsTeamLeagueOwnerOrReadOnly
 
 # Create your views here.
 class LeagueViewSet(ModelViewSet):
@@ -34,6 +35,7 @@ class LeagueViewSet(ModelViewSet):
 
     queryset = League.objects.all()
     serializer_class = LeagueSerializer
+    permission_classes = [IsLeagueOwnerOrReadOnly]
     ordering_fields = ["name", "created_at"]
     search_fields = ["name"]
 
@@ -41,6 +43,9 @@ class LeagueViewSet(ModelViewSet):
         if self.action == "standings":
             return StandingsSerializer
         return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
     @extend_schema(
         summary="Create standings table for a specific league.",
@@ -76,6 +81,7 @@ class TeamViewSet(ModelViewSet):
 
     queryset = Team.objects.all()
     serializer_class = TeamDetailSerializer
+    permission_classes = [IsTeamLeagueOwnerOrReadOnly]
     filterset_class = TeamFilter
     ordering_fields = ["name", "founded_year"]
     search_fields = ["name", "city"]
@@ -118,6 +124,7 @@ class PlayerViewSet(ModelViewSet):
 
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filterset_class = PlayerFilter
     ordering_fields = ["last_name", "jersey_number"]
     search_fields = ["first_name", "last_name"]
@@ -149,6 +156,7 @@ class MatchViewSet(ModelViewSet):
 
     queryset = Match.objects.all()
     serializer_class = MatchSerializer
+    permission_classes = [IsMatchLeagueOwnerOrReadOnly]
     filterset_class = MatchFilter
     ordering_fields = ["scheduled_date", "match_day"]
     search_fields = ["home_team__name", "away_team__name"]
