@@ -1,12 +1,12 @@
-  ## Comparison between different Authentication schemes
+## Comparison between different Authentication schemes
 
-  | Factor | Session Auth | Token (DRF) | JWT |
-  |---|---|---|---|
-  | Statefulness | Server-side | Server-side | Stateless |
-  | Scalability | Need shared store | Need shared DB | No shared state |
-  | Revocability | Easy (delete session) | Easy (delete token) | Hard (need blacklist) |
-  | CSRF risk | Yes (cookie-based) | No (header-based) | Depends on storage |
-  | Best for | Server-rendered apps | Simple APIs | Distributed/mobile APIs |
+| Factor | Session Auth | Token (DRF) | JWT |
+|---|---|---|---|
+| Statefulness | Server-side | Server-side | Stateless |
+| Scalability | Need shared store | Need shared DB | No shared state |
+| Revocability | Easy (delete session) | Easy (delete token) | Hard (need blacklist) |
+| CSRF risk | Yes (cookie-based) | No (header-based) | Depends on storage |
+| Best for | Server-rendered apps | Simple APIs | Distributed/mobile APIs |
 
 
 ---
@@ -14,8 +14,8 @@
 ## Authentication decision for Sports League API
 
 As this project is for a third-party client, then I'll use:
-* `**JWT**` for API endpoints.
-* `**session auth**` for Django admin.
+* **JWT** for API endpoints.
+* **session auth** for Django admin.
 
 this project is suitable for JWT, here's why:
 - No need for frequent stateful validation, as the user just signed in, check his favorite team, league, player, match, etc...
@@ -55,3 +55,48 @@ Tokens will be stored in header `Authorization: Bearer <token>` not cookie to av
 **Custom Claims:**
 - **`email`**: Email address of the logged-in user.
 - **`first_name`**: First name of the logged-in user.
+
+---
+
+## Permission Matrix
+
+| Endpoint | Unauthenticated | Authenticated | League Owner | Admin |
+|---|---|---|---|---|
+| `POST /api/v1/auth/register/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/auth/login/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/auth/refresh/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/auth/logout/` |❌ |✅ |✅ |✅ |
+| `GET /api/v1/auth/profile/` |❌ |✅ |✅ |✅ |
+| `PUT /api/v1/auth/profile/` |❌ |✅ |✅ |✅ |
+| `PATCH /api/v1/auth/profile/` |❌ |✅ |✅ |✅ |
+| `GET /api/v1/leagues/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/leagues/` |❌ |✅ |✅ |✅ |
+| `GET /api/v1/leagues/:id/` |✅ |✅ |✅ |✅ |
+| `PUT /api/v1/leagues/:id/` |❌ |❌ |✅ |✅ |
+| `PATCH /api/v1/leagues/:id/` |❌ |❌ |✅ |✅ |
+| `DELETE /api/v1/leagues/:id/` |❌ |❌ |✅ |✅ |
+| `GET /api/v1/leagues/:id/standings/` |✅ |✅ |✅ |✅ |
+| `GET /api/v1/teams/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/teams/` |❌ |❌ |✅ |✅ |
+| `GET /api/v1/teams/:id/` |✅ |✅ |✅ |✅ |
+| `PUT /api/v1/teams/:id/` |❌ |❌ |✅ |✅ |
+| `PATCH /api/v1/teams/:id/` |❌ |❌ |✅ |✅ |
+| `DELETE /api/v1/teams/:id/` |❌ |❌ |✅ |✅ |
+| `GET /api/v1/teams/:id/players/` |✅ |✅ |✅ |✅ |
+| `GET /api/v1/players/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/players/` |❌ |✅ |✅ |✅ |
+| `GET /api/v1/players/:id/` |✅ |✅ |✅ |✅ |
+| `PUT /api/v1/players/:id/` |❌ |✅ |✅ |✅ |
+| `PATCH /api/v1/players/:id/`|❌ |✅ |✅ |✅ |
+| `DELETE /api/v1/players/:id/` |❌ |✅ |✅ |✅ |
+| `GET /api/v1/matches/` |✅ |✅ |✅ |✅ |
+| `POST /api/v1/matches/` |❌ |❌ |✅ |✅ |
+| `GET /api/v1/matches/:id/` |✅ |✅ |✅ |✅ |
+| `PUT /api/v1/matches/:id/` |❌ |❌ |✅ |✅ |
+| `PATCH /api/v1/matches/:id/` |❌ |❌ |✅ |✅ |
+| `DELETE /api/v1/matches/:id/` |❌ |❌ |✅ |✅ |
+| `POST /api/v1/matches/:id/record_result/` |❌ |❌ |✅ |✅ |
+| `GET /api/health/` |✅ |✅ |✅ |✅ |
+| `GET /api/schema/` |✅ |✅ |✅ |✅ |
+| `GET /api/schema/swagger-ui/` |✅ |✅ |✅ |✅ |
+| `GET /api/schema/redoc/` |✅ |✅ |✅ |✅ |
