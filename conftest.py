@@ -1,6 +1,7 @@
 # third-party
 import pytest
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # local
 from leagues.models import League, Team, Player, Match
@@ -57,3 +58,50 @@ def sample_match(db):
         )
 
     return _create_match
+
+@pytest.fixture
+def user_factory(db, django_user_model):
+    def _create_user(email="test@example.com", password="Password123!", is_staff=False):
+        return django_user_model.objects.create(
+            email=email,
+            password=password,
+            is_staff=is_staff
+        )
+    return _create_user
+
+@pytest.fixture
+def user_a(user_factory):
+    return user_factory(email="user_a@example.com")
+
+@pytest.fixture
+def user_b(user_factory): # defines DB model instance User
+    return user_factory(email="user_b@example.com")
+
+@pytest.fixture
+def user_a_client(api_client, user_a): # defines the HTTP api client
+    client = api_client
+    token = RefreshToken.for_user(user_a).access_token
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    return client
+
+@pytest.fixture
+def user_b_client(api_client, user_b): # defines the HTTP api client
+    client = api_client
+    token = RefreshToken.for_user(user_b).access_token
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    return client
+
+@pytest.fixture
+def admin_user(user_factory):
+    return user_factory(email="admin@example.com", is_staff=True)
+
+@pytest.fixture
+def admin_client(api_client, admin_user):
+    client = api_client
+    token = RefreshToken.for_user(admin_user).access_token
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    return client
+
+@pytest.fixture
+def unauthenticated_client():
+    return APIClient()

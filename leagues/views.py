@@ -2,6 +2,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import status, serializers
 from drf_spectacular.utils import extend_schema, OpenApiResponse
@@ -97,6 +98,15 @@ class TeamViewSet(ModelViewSet):
         if self.action == "list":
             return TeamListSerializer
         return super().get_serializer_class()
+
+    def perform_create(self, serializer):
+        league = serializer.validated_data["league"]
+
+        # Verify that request.user owns the target league
+        if league.owner != self.request.user and not self.request.user.is_staff:
+            raise PermissionDenied("You do not own this league.")
+
+        serializer.save()
 
     @extend_schema(
         summary="Show all players of a specific team",
