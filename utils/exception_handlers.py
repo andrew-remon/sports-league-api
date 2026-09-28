@@ -6,6 +6,8 @@ from rest_framework.views import exception_handler
 from rest_framework import exceptions
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.http import Http404
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +16,24 @@ def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
     if response is not None:
+        if isinstance(exc, Http404):
+            exc = exceptions.NotFound()
+        elif isinstance(exc, DjangoPermissionDenied):
+            exc = exceptions.PermissionDenied()
+
         formatted_errors = []
-        error_code = exc.default_code
 
         if isinstance(exc, exceptions.ValidationError):
             message = "Invalid Input"
+            error_code = "validation_error" # I omit it from the outer block to make it specific by branch
 
             for field, errors in response.data.items():
                 for error in errors:
                     error_row = {"field": field, "issue": error}
                     formatted_errors.append(error_row)
         else:
-            message = str(response.data.get("detail"))  # response return error object by default
+            message = str(response.data.get("detail", "Request Failed"))  # response return error object by default
+            error_code = exc.get_codes()
 
         response.data = {
             "error": {
