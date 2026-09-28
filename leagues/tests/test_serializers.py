@@ -29,8 +29,8 @@ def test_create_match_with_result(api_client, sample_league, sample_team):
     assert response.data["home_team"] == data["home_team"]
 
 @pytest.mark.django_db
-def test_record_result_conflict(api_client, sample_league, sample_team, sample_match):
-
+def test_record_result_conflict(api_client, sample_league, sample_team, sample_match, admin_user):
+    api_client.force_authenticate(user=admin_user)
     league = sample_league(name="Premier League", max_teams=20)
 
     team_a = sample_team(name="Leeds United", league=league, city="Leeds")

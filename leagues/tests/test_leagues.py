@@ -20,7 +20,8 @@ def test_list_league(api_client, sample_league):
 
 
 @pytest.mark.django_db
-def test_create_league(api_client):
+def test_create_league(api_client, admin_user):
+    api_client.force_authenticate(user=admin_user) # this is necessary to pass authentication layer exception
     data = {"name": "Premier League", "max_teams": 20}
     url = reverse("league-list")
     response = api_client.post(url, data, format="json")
@@ -37,24 +38,30 @@ def test_create_league(api_client):
 
 
 @pytest.mark.django_db
-def test_create_league_invalid(api_client):
+def test_create_league_invalid(api_client, admin_user):
+    api_client.force_authenticate(user=admin_user)
     data = {"name": "", "max_teams": 18}
     url = reverse("league-list")
     response = api_client.post(url, data, format="json")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "name" in response.data
+    # assert "name" in response.data
+    assert response.data["error"]["code"] == "validation_error"
+    assert any(d["field"] == "name" for d in response.data["error"]["details"])
     assert League.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_create_league_duplicate_name(api_client, sample_league):
+def test_create_league_duplicate_name(api_client, sample_league, admin_user):
+    api_client.force_authenticate(user=admin_user)
     sample_league(name="Premier League", max_teams=20)
 
     data = {"name": "Premier League", "max_teams": 20}
     url = reverse("league-list")
     response = api_client.post(url, data, format="json")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert "name" in response.data
+    # assert "name" in response.data -> "name" isn't becoming a top level field, as the exception handler put it in an envelope now data["error"]
+    assert response.data["error"]["code"] == "validation_error"
+    assert any(d["field"] == "name" for d in response.data["error"]["details"])
     assert League.objects.count() == 1  # same as before, No insertions happened
 
 
@@ -86,7 +93,8 @@ def test_retrieve_nonexistent_league(api_client):
 
 
 @pytest.mark.django_db
-def test_update_league(api_client, sample_league):
+def test_update_league(api_client, sample_league, admin_user):
+    api_client.force_authenticate(user=admin_user)
     created_league = sample_league(name="Premier League", max_teams=10)  # max_teams needs an update
 
     url = reverse("league-detail", kwargs={"pk": created_league.id})
@@ -104,7 +112,8 @@ def test_update_league(api_client, sample_league):
 
 
 @pytest.mark.django_db
-def test_delete_league(api_client, sample_league):
+def test_delete_league(api_client, sample_league, admin_user):
+    api_client.force_authenticate(user=admin_user)
     created_league = sample_league(name="Premier League", max_teams=18)
 
     url = reverse("league-detail", kwargs={"pk": created_league.id})
