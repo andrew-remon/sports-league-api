@@ -1,10 +1,12 @@
 # third-party
-from django.utils import timezone
+import pytest
 from django.urls import reverse
 from rest_framework import status
-import pytest
+from utils.exceptions import ValidationError
 
 from leagues.models import Match, MatchResult
+from leagues.serializers import LeagueSerializer, TeamDetailSerializer, MatchSerializer, StandingsSerializer
+from tests.factories import LeagueFactory, MatchFactory, TeamFactory
 
 @pytest.mark.django_db
 def test_create_match_with_result(api_client, sample_league, sample_team):
@@ -76,3 +78,65 @@ def test_create_match_without_result(api_client, sample_league, sample_team):
     results = response.data["result"]
     assert response.data["home_team"] == data["home_team"]
     assert response.data['status'] == "scheduled"
+
+
+@pytest.mark.django_db
+def test_league_serializer_valid():
+    data = {"name": "Premier League"}
+    serializer = LeagueSerializer(data=data)
+    assert serializer.is_valid()
+
+@pytest.mark.django_db
+def test_league_serializer_empty_name():
+    data = {"name": ""}
+    serializer = LeagueSerializer(data=data)
+    assert serializer.is_valid() == False
+
+@pytest.mark.django_db
+def test_team_serializer_read_nests_league():
+    league = LeagueFactory.create()
+    team = TeamFactory.create(league=league)
+    serializer = TeamDetailSerializer(team)
+    assert isinstance(serializer.data["league"], dict)
+    assert serializer.data["league"]["id"] == league.id
+    assert serializer.data["league"]["name"] == league.name
+
+@pytest.mark.django_db
+def test_team_serializer_write_accepts_pk():
+    league = LeagueFactory.create()
+    team_data = {
+        "name":"Man City",
+        "city":"Manchester",
+        "league":league.id
+    }
+    serializer = TeamDetailSerializer(data=team_data)
+    assert serializer.is_valid()
+    assert serializer.validated_data.get("league") == league
+
+@pytest.mark.django_db
+def test_match_serializer_validation_same_teams():
+    team = TeamFactory.create()
+    match_data = {
+        "home_team":team.id,
+        "away_team":team.id,
+        "league":5
+    }
+    serializer = MatchSerializer(data = match_data)
+    assert serializer.is_valid() == False
+
+def test_standings_serializer_output():
+    standings_data = {
+        "team_name":"Man City",
+        "played":10,
+        "won":7,
+        "drawn":2,
+        "lost":1,
+        "goals_for":23,
+        "goals_against":11,
+        "goal_difference":12,
+        "points":23
+    }
+
+    serializer = StandingsSerializer(standings_data)
+    assert serializer.data["team_name"] == "Man City"
+    assert set(serializer.data.keys()) == {"team_name", "played", "won", "drawn", "lost", "goals_for", "goals_against", "goal_difference", "points"}
